@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
   // Replace with your current ngrok URL or production URL
-  const BASE_URL = 'https://new-ngrok-url.ngrok-free.app'; // Update this!
+  const BASE_URL = 'https://5066-14-143-149-238.ngrok-free.app'; // Update this!
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
