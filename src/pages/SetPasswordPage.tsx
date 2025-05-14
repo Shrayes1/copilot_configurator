@@ -31,14 +31,14 @@ const SetPasswordPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
+  
     // Validate token presence
     if (!token) {
       setError('No token provided in the URL');
       console.error('Token missing in URL');
       return;
     }
-
+  
     // Password validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (password !== confirmPassword) {
@@ -51,7 +51,12 @@ const SetPasswordPage: React.FC = () => {
       console.log('Password validation failed: Does not meet strength requirements');
       return;
     }
-
+  
+    // Prepare data in x-www-form-urlencoded format
+    const formData = new URLSearchParams();
+    formData.append('token', token);
+    formData.append('pw', password);
+  
     // Send POST request to /set-password
     try {
       console.log('Sending POST request to /set-password with payload:', {
@@ -61,26 +66,23 @@ const SetPasswordPage: React.FC = () => {
       const response = await fetch(`${BASE_URL}/set-password`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-          token: token,
-          pw: password,
-        }),
+        body: formData,
       });
-
+  
       console.log('Response status:', response.status);
       const data = await response.json();
       console.log('Response data:', data);
-
+  
       if (!response.ok) {
         throw new Error(data.message || 'Failed to set password');
       }
-
+  
       if (data.msg !== 'Password set successfully') {
         throw new Error(data.msg || 'Unexpected response from server');
       }
-
+  
       // On success
       console.log('Password set successfully, setting success state');
       setSuccess(true);
