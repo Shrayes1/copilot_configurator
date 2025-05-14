@@ -65,6 +65,12 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Client-side validation for email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.adminEmail)) {
+      alert('Please enter a valid email address');
+      return;
+    }
     const enabledModules = Object.keys(modules).filter((moduleId) => modules[moduleId]);
     onSubmit({
       ...formData,
@@ -238,42 +244,73 @@ const ServiceDashboardPage: React.FC = () => {
 
   const handleAddOrganization = async (formData: FormData) => {
     try {
-      // Simulate backend API call to generate one-time link and send email
-      // Uncomment and configure when backend is available
-      /*
-      const response = await fetch('/api/invite-admin', {
+      console.log('Form data submitted:', formData);
+    
+      // Step 1: Create the organization and admin user
+      const createOrgResponse = await fetch('https://5066-14-143-149-238.ngrok-free.app/create_org', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${authState.token}`,
+        },
         body: JSON.stringify({
-          adminEmail: formData.adminEmail,
-          adminName: formData.adminName,
-          organizationId: formData.organizationId,
-          organizationName: formData.organizationName,
+          username: formData.organizationId,
+          name: formData.adminName,
+          email: formData.adminEmail,
+          role: "admin",
+          org_settings_id: formData.organizationId,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to send invitation email');
+    
+      const createOrgData = await createOrgResponse.json();
+      console.log('create_org response:', createOrgData);
+    
+      if (!createOrgResponse.ok) {
+        throw new Error(createOrgData.message || 'Failed to create organization');
       }
-
-      const { token } = await response.json(); // Assume backend returns a token
-      const oneTimeLink = `${window.location.origin}/set-password/${token}`;
-      */
-
-      // Simulate adding to mockUsers (replace with backend user creation when available)
-      mockUsers.push({
-        id: `user-${formData.organizationId}`,
-        name: formData.adminName,
-        email: formData.adminEmail,
-        organizationId: formData.organizationId,
-        role: 'admin',
-        avatar: '',
+    
+      if (createOrgData.msg !== 'Organization admin created. Send password creation link to email.') {
+        throw new Error(createOrgData.msg || 'Unexpected response from server');
+      }
+    
+      // Step 2: Get token and send password set email
+      const token = createOrgData.pass_token;
+      console.log('Token received:', token);
+      console.log('Admin email:', formData.adminEmail);
+      console.log('Organization ID:', formData.organizationId);
+      console.log('Organization name:', formData.organizationName);
+      if (!token) {
+        throw new Error('No token received from create_org response');
+      }
+    
+      const sendPasswordResponse = await fetch('https://5066-14-143-149-238.ngrok-free.app/send_password_set', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender_email: formData.adminEmail,  // ✅ Correct key
+          user_name: formData.organizationId,
+          token: token,
+        }),
       });
-
-      // Create new organization
+      
+    
+      const sendPasswordData = await sendPasswordResponse.json();
+      console.log('send_password_set response:', sendPasswordData);
+    
+      if (!sendPasswordResponse.ok) {
+        throw new Error(sendPasswordData.message || 'Failed to send password creation email');
+      }
+    
+      if (sendPasswordData.msg !== 'Password reset email sent') {
+        throw new Error(sendPasswordData.msg || 'Unexpected response from password email endpoint');
+      }
+    
+      // Step 3: Update local state
       const newOrganization: Organization = {
         id: formData.organizationId,
-        name: formData.organizationName,
+        name: formData.organizationName || formData.organizationId,
         type: 'customer',
         serviceProviderId: organization?.id || '',
         plan: formData.plan as 'basic' | 'professional' | 'growth',
@@ -281,17 +318,17 @@ const ServiceDashboardPage: React.FC = () => {
           total: formData.totalLicenses,
           used: 0,
           modules: {
-            'meeting-assistant': { 
-              total: formData.enabledModules?.includes('meeting-assistant') ? formData.totalLicenses : 0, 
-              used: 0 
+            'meeting-assistant': {
+              total: formData.enabledModules?.includes('meeting-assistant') ? formData.totalLicenses : 0,
+              used: 0,
             },
-            'email-assistant': { 
-              total: formData.enabledModules?.includes('email-assistant') ? formData.totalLicenses : 0, 
-              used: 0 
+            'email-assistant': {
+              total: formData.enabledModules?.includes('email-assistant') ? formData.totalLicenses : 0,
+              used: 0,
             },
-            'document-assistant': { 
-              total: formData.enabledModules?.includes('document-assistant') ? formData.totalLicenses : 0, 
-              used: 0 
+            'document-assistant': {
+              total: formData.enabledModules?.includes('document-assistant') ? formData.totalLicenses : 0,
+              used: 0,
             },
           },
         },
@@ -307,14 +344,15 @@ const ServiceDashboardPage: React.FC = () => {
         },
         createdAt: new Date().toISOString(),
       };
-
+    
       setOrganizations((prev) => [...prev, newOrganization]);
       setIsModalOpen(false);
       setSuccessMessage(`A link to set the password has been sent to ${formData.adminEmail}`);
-      
+    
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
+    
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       setSuccessMessage(`Failed to add organization: ${errorMessage}`);

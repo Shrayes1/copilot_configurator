@@ -1,18 +1,18 @@
 export interface User {
-  id: string;
+  id: string; // Required for mockUsers and UserRow comparison
   name: string;
   email: string;
+  role: string; // Can be "cognicor_admin", "org_admin", or others
   organizationId: string;
-  role: 'admin' | 'user';
-  avatar: string;
-  lastActive?: string; // Optional
-  modules?: string[]; // Optional
+  avatar?: string;
+  lastActive?: string;
+  modules?: string[];
 }
 
 export interface Organization {
   id: string;
   name: string;
-  type: 'service_provider' | 'customer';
+  type?: 'service_provider' | 'customer';
   serviceProviderId: string;
   plan: 'basic' | 'professional' | 'growth';
   licenses: {

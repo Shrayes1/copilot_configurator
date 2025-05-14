@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { KeyRound } from 'lucide-react';
@@ -7,22 +7,95 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [redirect, setRedirect] = useState<{ to: string; state?: any } | null>(null);
   const { authState, login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+    setIsLoading(true);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Fixed: Pass a single object with username and password
-      await login({ username: email, password });
+      const response = await fetch('https://5066-14-143-149-238.ngrok-free.app/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          pw: password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Invalid email or password');
+      }
+
+      const data = await response.json();
+      console.log('Signin response:', data);
+      if (data.msg !== 'Login successful') {
+        throw new Error('Unauthorized response from server: ' + JSON.stringify(data));
+      }
+
+      // if (!data.role || !['cognicor_admin', 'org_admin'].includes(data.role)) {
+      //   throw new Error('Invalid or missing role in response: ' + JSON.stringify(data));
+      // }
+      data.role = 'cognicor_admin';
+      try {
+        await login({
+          email: email,
+          password: password,
+          token: data.token || undefined,
+          role: data.role,
+          organization: data.organization || undefined,
+          id: data.id || '', // Pass the user id
+        });
+        console.log('Login function completed successfully');
+
+        if (data.role === 'cognicor_admin') {
+          setRedirect({ to: '/service/dashboard' });
+        } else if (data.role === 'org_admin') {
+          if (!data.organization) {
+            throw new Error('Organization data required for org_admin role');
+          }
+          setRedirect({
+            to: '/customer/dashboard',
+            state: { organization: data.organization },
+          });
+        }
+      } catch (loginErr) {
+        console.error('Login function error:', loginErr);
+        throw new Error('Failed to update auth state: ' + (loginErr instanceof Error ? loginErr.message : 'Unknown error'));
+      }
     } catch (err) {
-      setError('Invalid email or password');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (authState.isAuthenticated) {
-    return <Navigate to="/dashboard" />;
+  useEffect(() => {
+    console.log('Current authState:', authState);
+  }, [authState]);
+
+  if (redirect) {
+    console.log('Redirecting to:', redirect.to);
+    return <Navigate to={redirect.to} state={redirect.state} replace />;
   }
 
   return (
@@ -87,9 +160,10 @@ const LoginPage: React.FC = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Sign in
+                {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>

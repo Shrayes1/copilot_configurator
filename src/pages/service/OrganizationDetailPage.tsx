@@ -270,7 +270,7 @@ const OrganizationDetailPage: React.FC = () => {
                             </span>
                           )}
                           <span className="text-xs text-gray-500">
-                            {user.modules.length} module{user.modules.length !== 1 ? 's' : ''}
+                            {(user.modules ?? []).length} module{(user.modules ?? []).length !== 1 ? 's' : ''}
                           </span>
                         </div>
                       </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Search, MoreHorizontal, UserPlus } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -35,11 +36,13 @@ const UserRow: React.FC<{ user: User; currentUser: User | null }> = ({ user, cur
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium
-          ${user.role === 'admin' 
-            ? 'bg-purple-100 text-purple-800' 
-            : 'bg-blue-100 text-blue-800'}`
-        }>
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-xs font-medium
+            ${user.role === 'cognicor_admin' || user.role === 'org_admin'
+              ? 'bg-purple-100 text-purple-800'
+              : 'bg-blue-100 text-blue-800'}`
+          }
+        >
           {user.role}
         </span>
       </td>
@@ -84,10 +87,15 @@ const UserRow: React.FC<{ user: User; currentUser: User | null }> = ({ user, cur
 const UsersPage: React.FC = () => {
   const { authState } = useAuth();
   const [search, setSearch] = useState('');
-  
+
+  // Redirect to login if user is not authenticated
+  if (!authState.isAuthenticated || !authState.user || !authState.organization) {
+    return <Navigate to="/login" replace />;
+  }
+
   // Filter users by organization and search term
   const filteredUsers = mockUsers
-    .filter(user => user.organizationId === authState.organization?.id)
+    .filter(user => authState.organization?.id && user.organizationId === authState.organization.id)
     .filter(user => 
       user.name.toLowerCase().includes(search.toLowerCase()) || 
       user.email.toLowerCase().includes(search.toLowerCase())
@@ -171,18 +179,16 @@ const UsersPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total licenses</p>
-                <p className="text-2xl font-semibold text-gray-900">{authState.organization?.licenses.total || 0}</p>
+                <p className="text-2xl font-semibold text-gray-900">{authState.organization.licenses.total}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Used licenses</p>
-                <p className="text-2xl font-semibold text-gray-900">{authState.organization?.licenses.used || 0}</p>
+                <p className="text-2xl font-semibold text-gray-900">{authState.organization.licenses.used}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Available</p>
                 <p className="text-2xl font-semibold text-green-600">
-                  {authState.organization 
-                    ? authState.organization.licenses.total - authState.organization.licenses.used 
-                    : 0}
+                  {authState.organization.licenses.total - authState.organization.licenses.used}
                 </p>
               </div>
             </div>
@@ -191,18 +197,14 @@ const UsersPage: React.FC = () => {
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium text-gray-700">Usage</span>
                 <span className="text-sm font-medium text-gray-700">
-                  {authState.organization ? 
-                    Math.round((authState.organization.licenses.used / authState.organization.licenses.total) * 100) 
-                    : 0}%
+                  {Math.round((authState.organization.licenses.used / authState.organization.licenses.total) * 100)}%
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
                   className="bg-blue-600 h-2.5 rounded-full" 
                   style={{ 
-                    width: authState.organization ? 
-                      `${(authState.organization.licenses.used / authState.organization.licenses.total) * 100}%` 
-                      : '0%' 
+                    width: `${(authState.organization.licenses.used / authState.organization.licenses.total) * 100}%`
                   }}
                 ></div>
               </div>
