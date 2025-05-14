@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 
 const SetPasswordPage: React.FC = () => {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
   const [hasMinLength, setHasMinLength] = useState(false);
   const [hasUppercase, setHasUppercase] = useState(false);
   const [hasLowercase, setHasLowercase] = useState(false);
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
+
+  // Replace with your current ngrok URL or production URL
+  const BASE_URL = 'https://new-ngrok-url.ngrok-free.app'; // Update this!
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
@@ -23,24 +28,77 @@ const SetPasswordPage: React.FC = () => {
     setHasSpecialChar(/[@$!%*?&]/.test(password));
   }, [password]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+    // Validate token presence
+    if (!token) {
+      setError('No token provided in the URL');
+      console.error('Token missing in URL');
+      return;
+    }
 
+    // Password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      console.log('Password validation failed: Passwords do not match');
       return;
     }
-
     if (!passwordRegex.test(password)) {
       setError('Password must meet strength requirements');
+      console.log('Password validation failed: Does not meet strength requirements');
       return;
     }
 
-    // Success – you can do something else here later
-    setSuccess(true);
+    // Send POST request to /set-password
+    try {
+      console.log('Sending POST request to /set-password with payload:', {
+        token,
+        pw: password,
+      });
+      const response = await fetch(`${BASE_URL}/set-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: token,
+          pw: password,
+        }),
+      });
+
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to set password');
+      }
+
+      if (data.msg !== 'Password set successfully') {
+        throw new Error(data.msg || 'Unexpected response from server');
+      }
+
+      // On success
+      console.log('Password set successfully, setting success state');
+      setSuccess(true);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+        console.error('Error in POST request:', err.message);
+      } else {
+        setError('An unexpected error occurred');
+        console.error('Unexpected error in POST request:', err);
+      }
+    } finally {
+      // Always redirect after 2 seconds, even if there's an error
+      setTimeout(() => {
+        console.log('Redirecting to /login');
+        navigate('/login');
+      }, 2000);
+    }
   };
 
   return (
@@ -52,7 +110,16 @@ const SetPasswordPage: React.FC = () => {
           </h2>
 
           {success ? (
-            <p className="text-green-600">Password saved (frontend-only demo).</p>
+            <div>
+              <p className="text-green-600">
+                Your password has been set. Redirecting to login page...
+              </p>
+              <div className="mt-6">
+                <Button variant="primary" onClick={() => navigate('/login')}>
+                  Go to Login
+                </Button>
+              </div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
