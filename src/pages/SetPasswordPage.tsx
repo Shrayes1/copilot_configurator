@@ -59,10 +59,8 @@ const SetPasswordPage: React.FC = () => {
   
     // Send POST request to /set-password
     try {
-      console.log('Sending POST request to /set-password with payload:', {
-        token,
-        pw: password,
-      });
+      console.log('Sending POST request to:', `${BASE_URL}/set-password`);
+      console.log('Payload:', formData.toString());
       const response = await fetch(`${BASE_URL}/set-password`, {
         method: 'POST',
         headers: {
@@ -83,19 +81,17 @@ const SetPasswordPage: React.FC = () => {
         throw new Error(data.msg || 'Unexpected response from server');
       }
   
-      // On success
       console.log('Password set successfully, setting success state');
       setSuccess(true);
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message);
+        setError(err.message || 'Failed to fetch');
         console.error('Error in POST request:', err.message);
       } else {
         setError('An unexpected error occurred');
         console.error('Unexpected error in POST request:', err);
       }
     } finally {
-      // Always redirect after 2 seconds, even if there's an error
       setTimeout(() => {
         console.log('Redirecting to /login');
         navigate('/login');
