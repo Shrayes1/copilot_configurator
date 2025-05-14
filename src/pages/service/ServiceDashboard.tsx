@@ -245,13 +245,12 @@ const ServiceDashboardPage: React.FC = () => {
   const handleAddOrganization = async (formData: FormData) => {
     try {
       console.log('Form data submitted:', formData);
-    
+  
       // Step 1: Create the organization and admin user
       const createOrgResponse = await fetch('https://5066-14-143-149-238.ngrok-free.app/create_org', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${authState.token}`,
         },
         body: JSON.stringify({
           username: formData.organizationId,
@@ -261,18 +260,20 @@ const ServiceDashboardPage: React.FC = () => {
           org_settings_id: formData.organizationId,
         }),
       });
-    
+  
+      if (!createOrgResponse.ok) {
+        const errorData = await createOrgResponse.json();
+        console.error('create_org API error:', errorData);
+        throw new Error(errorData.message || 'Failed to create organization');
+      }
+  
       const createOrgData = await createOrgResponse.json();
       console.log('create_org response:', createOrgData);
-    
-      if (!createOrgResponse.ok) {
-        throw new Error(createOrgData.message || 'Failed to create organization');
-      }
-    
+  
       if (createOrgData.msg !== 'Organization admin created. Send password creation link to email.') {
         throw new Error(createOrgData.msg || 'Unexpected response from server');
       }
-    
+  
       // Step 2: Get token and send password set email
       const token = createOrgData.pass_token;
       console.log('Token received:', token);
@@ -282,31 +283,32 @@ const ServiceDashboardPage: React.FC = () => {
       if (!token) {
         throw new Error('No token received from create_org response');
       }
-    
+  
       const sendPasswordResponse = await fetch('https://5066-14-143-149-238.ngrok-free.app/send_password_set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sender_email: formData.adminEmail,  // ✅ Correct key
+          sender_email: formData.adminEmail,
           user_name: formData.organizationId,
           token: token,
         }),
       });
-      
-    
+  
+      if (!sendPasswordResponse.ok) {
+        const errorData = await sendPasswordResponse.json();
+        console.error('send_password_set API error:', errorData);
+        throw new Error(errorData.message || 'Failed to send password creation email');
+      }
+  
       const sendPasswordData = await sendPasswordResponse.json();
       console.log('send_password_set response:', sendPasswordData);
-    
-      if (!sendPasswordResponse.ok) {
-        throw new Error(sendPasswordData.message || 'Failed to send password creation email');
-      }
-    
+  
       if (sendPasswordData.msg !== 'Password reset email sent') {
         throw new Error(sendPasswordData.msg || 'Unexpected response from password email endpoint');
       }
-    
+  
       // Step 3: Update local state
       const newOrganization: Organization = {
         id: formData.organizationId,
@@ -344,17 +346,17 @@ const ServiceDashboardPage: React.FC = () => {
         },
         createdAt: new Date().toISOString(),
       };
-    
+  
       setOrganizations((prev) => [...prev, newOrganization]);
       setIsModalOpen(false);
       setSuccessMessage(`A link to set the password has been sent to ${formData.adminEmail}`);
-    
+  
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-    
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      console.error('Error in handleAddOrganization:', errorMessage);
       setSuccessMessage(`Failed to add organization: ${errorMessage}`);
       setTimeout(() => {
         setSuccessMessage(null);
