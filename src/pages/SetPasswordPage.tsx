@@ -70,6 +70,17 @@ const SetPasswordPage: React.FC = () => {
       });
   
       console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers.get('content-type'));
+  
+      // Check if the response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error('Server did not return JSON. Check the endpoint or server logs.');
+      }
+  
+      // Parse JSON response
       const data = await response.json();
       console.log('Response data:', data);
   
