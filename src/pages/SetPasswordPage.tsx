@@ -108,7 +108,7 @@ const SetPasswordPage: React.FC = () => {
       if (err instanceof Error) {
         errorMessage = err.message;
         console.error('Error in POST request:', err.message);
-        if (err.message.includes('Token')) {
+        if (err.message.includes('token')) {
           errorMessage = 'Invalid or expired token. Please request a new password reset link.';
         }
       } else {

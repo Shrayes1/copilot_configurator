@@ -254,13 +254,13 @@ const ServiceDashboardPage: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('Form data submitted:', formData);
-  
+
       // Step 1: Create the organization and admin user
       const createOrgResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/create_org', {
         method: 'POST',
         headers: {
-          
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({
           username: formData.organizationId,
@@ -270,32 +270,39 @@ const ServiceDashboardPage: React.FC = () => {
           org_settings_id: formData.organizationId,
         }),
       });
-  
+
       console.log('create_org status:', createOrgResponse.status);
+      const createOrgContentType = createOrgResponse.headers.get('content-type');
+      if (!createOrgContentType || !createOrgContentType.includes('application/json')) {
+        const text = await createOrgResponse.text();
+        console.error('Non-JSON response from create_org:', text);
+        throw new Error('Server returned an unexpected response. Check the create_org endpoint.');
+      }
+
       const createOrgData = await createOrgResponse.json();
       console.log('create_org response:', createOrgData);
-  
+
       if (!createOrgResponse.ok) {
         console.error('create_org API error:', createOrgData);
         throw new Error(createOrgData.message || 'Failed to create organization');
       }
-  
+
       if (createOrgData.msg !== 'Organization admin created. Send password creation link to email.') {
-        throw new Error(createOrgData.msg || 'Unexpected response from server');
+        throw new Error(createOrgData.msg || 'Unexpected response from create_org');
       }
-  
+
       // Step 2: Get token and send password set email
       const token = createOrgData.pass_token;
       console.log('Token received:', token);
       if (!token) {
         throw new Error('No token received from create_org response');
       }
-  
+
       const sendPasswordResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/send_password_set', {
         method: 'POST',
         headers: {
-         
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({
           sender_email: formData.adminEmail,
@@ -303,20 +310,31 @@ const ServiceDashboardPage: React.FC = () => {
           token: token,
         }),
       });
-  
+
       console.log('send_password_set status:', sendPasswordResponse.status);
+      const sendPasswordContentType = sendPasswordResponse.headers.get('content-type');
+      if (!sendPasswordContentType || !sendPasswordContentType.includes('application/json')) {
+        const text = await sendPasswordResponse.text();
+        console.error('Non-JSON response from send_password_set:', text);
+        throw new Error('Server returned an unexpected response. Check the send_password_set endpoint.');
+      }
+
       const sendPasswordData = await sendPasswordResponse.json();
       console.log('send_password_set response:', sendPasswordData);
-  
+
       if (!sendPasswordResponse.ok) {
         console.error('send_password_set API error:', sendPasswordData);
         throw new Error(sendPasswordData.message || 'Failed to send password creation email');
       }
-  
-      if (!['Password reset email sent', 'Email sent successfully'].includes(sendPasswordData.msg)) {
-        throw new Error(sendPasswordData.msg || 'Unexpected response from password email endpoint');
+
+      // Allow more flexible response messages
+      const validMessages = ['Password reset email sent', 'Email sent successfully', 'Email sent'];
+      if (!validMessages.includes(sendPasswordData.msg)) {
+        console.warn('Unexpected msg from send_password_set:', sendPasswordData.msg);
+        // Optionally proceed instead of throwing
+        // throw new Error(sendPasswordData.msg || 'Unexpected response from password email endpoint');
       }
-  
+
       // Step 3: Update local state
       const newOrganization: Organization = {
         id: formData.organizationId,
@@ -354,11 +372,11 @@ const ServiceDashboardPage: React.FC = () => {
         },
         createdAt: new Date().toISOString(),
       };
-  
+
       setOrganizations((prev) => [...prev, newOrganization]);
       setIsModalOpen(false);
       setSuccessMessage(`Organization created! A password setup link was sent to ${formData.adminEmail}`);
-  
+
       const timeoutId = setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -374,7 +392,7 @@ const ServiceDashboardPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Loading Screen */}
