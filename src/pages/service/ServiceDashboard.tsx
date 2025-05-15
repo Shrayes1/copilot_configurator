@@ -287,7 +287,7 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error(createOrgData.message || 'Failed to create organization');
       }
 
-      if (createOrgData.msg !== 'Organization admin created. Send password creation link to email.') {
+      if (createOrgData.msg !== 'Org admin created') {
         throw new Error(createOrgData.msg || 'Unexpected response from create_org');
       }
 
