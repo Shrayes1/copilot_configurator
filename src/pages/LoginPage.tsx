@@ -28,9 +28,10 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://6291-14-143-149-238.ngrok-free.app/signin', {
+      const response = await fetch('https://pretty-otters-dance.loca.lt/signin', {
         method: 'POST',
         headers: {
+          'bypass-tunnel-reminder': 'true',
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },

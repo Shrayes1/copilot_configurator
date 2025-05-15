@@ -17,8 +17,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-  // Replace with your current ngrok URL or production URL
-  const BASE_URL = 'https://6291-14-143-149-238.ngrok-free.app';
+  const BASE_URL = 'https://pretty-otters-dance.loca.lt';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
@@ -60,6 +59,7 @@ const SetPasswordPage: React.FC = () => {
       const response = await fetch(`${BASE_URL}/set-password`, {
         method: 'POST',
         headers: {
+          'bypass-tunnel-reminder': 'true',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),

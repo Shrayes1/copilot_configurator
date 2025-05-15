@@ -247,9 +247,10 @@ const ServiceDashboardPage: React.FC = () => {
       console.log('Form data submitted:', formData);
   
       // Step 1: Create the organization and admin user
-      const createOrgResponse = await fetch('https://6291-14-143-149-238.ngrok-free.app/create_org', {
+      const createOrgResponse = await fetch('https://pretty-otters-dance.loca.lt/create_org', {
         method: 'POST',
         headers: {
+          'bypass-tunnel-reminder': 'true',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -284,9 +285,10 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error('No token received from create_org response');
       }
   
-      const sendPasswordResponse = await fetch('https://6291-14-143-149-238.ngrok-free.app/send_password_set', {
+      const sendPasswordResponse = await fetch('https://pretty-otters-dance.loca.lt/send_password_set', {
         method: 'POST',
         headers: {
+          'bypass-tunnel-reminder': 'true',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
