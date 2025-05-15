@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-  const BASE_URL = 'https://long-tables-show.loca.lt';
+  const BASE_URL = 'https://ready-items-burn.loca.lt';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);

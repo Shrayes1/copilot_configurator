@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://long-tables-show.loca.lt/signin', {
+      const response = await fetch('https://ready-items-burn.loca.lt/signin', {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',
