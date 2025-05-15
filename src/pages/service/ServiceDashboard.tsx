@@ -247,7 +247,7 @@ const ServiceDashboardPage: React.FC = () => {
       console.log('Form data submitted:', formData);
   
       // Step 1: Create the organization and admin user
-      const createOrgResponse = await fetch('https://tough-rings-leave.loca.lt/create_org', {
+      const createOrgResponse = await fetch('https://long-tables-show.loca.lt/create_org', {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',
@@ -282,7 +282,7 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error('No token received from create_org response');
       }
   
-      const sendPasswordResponse = await fetch('https://tough-rings-leave.loca.lt/send_password_set', {
+      const sendPasswordResponse = await fetch('https://long-tables-show.loca.lt/send_password_set', {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',
