@@ -53,7 +53,7 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/set-password/:token" element={<SetPasswordPage />} />
+          <Route path="/set_password/:token" element={<SetPasswordPage />} />
           
           {/* Set root path to login page */}
           <Route path="/" element={<LoginPage />} />

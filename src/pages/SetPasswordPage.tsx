@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-  const BASE_URL = 'https://dull-windows-write.loca.lt';
+  const BASE_URL = 'https://light-nights-sort.loca.lt';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
@@ -58,10 +58,10 @@ const SetPasswordPage: React.FC = () => {
     };
 
     try {
-      console.log('Sending POST request to:', `${BASE_URL}/set-password`);
+      console.log('Sending POST request to:', `${BASE_URL}/set_password`);
       console.log('Payload:', JSON.stringify(requestBody));
 
-      const response = await fetch(`${BASE_URL}/set-password`, {
+      const response = await fetch(`${BASE_URL}/set_password`, {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',

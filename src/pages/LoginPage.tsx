@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://dull-windows-write.loca.lt/signin', {
+      const response = await fetch('https://light-nights-sort.loca.lt/signin', {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',
