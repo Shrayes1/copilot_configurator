@@ -11,6 +11,7 @@ const SetPasswordPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasMinLength, setHasMinLength] = useState(false);
   const [hasUppercase, setHasUppercase] = useState(false);
   const [hasLowercase, setHasLowercase] = useState(false);
@@ -30,32 +31,36 @@ const SetPasswordPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-  
+    setIsLoading(true);
+
     if (!token) {
       setError('No token provided in the URL');
       console.error('Token missing in URL');
+      setIsLoading(false);
       return;
     }
-  
+
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setIsLoading(false);
       return;
     }
     if (!passwordRegex.test(password)) {
       setError('Password must meet strength requirements');
+      setIsLoading(false);
       return;
     }
-  
+
     const requestBody = {
       password: password,
       token: token,
     };
-  
+
     try {
       console.log('Sending POST request to:', `${BASE_URL}/set-password`);
       console.log('Payload:', JSON.stringify(requestBody));
-  
+
       const response = await fetch(`${BASE_URL}/set-password`, {
         method: 'POST',
         headers: {
@@ -64,42 +69,48 @@ const SetPasswordPage: React.FC = () => {
         },
         body: JSON.stringify(requestBody),
       });
-  
+
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
         console.error('Non-JSON response received:', text);
         throw new Error('Server did not return JSON. Check the endpoint or server logs.');
       }
-  
+
       const data = await response.json();
       console.log('Response data:', data);
-  
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to set password');
       }
-  
+
       if (data.msg !== 'Password set successfully') {
         throw new Error(data.msg || 'Unexpected response from server');
       }
-  
+
       console.log('Password set successfully, setting success state');
       setSuccess(true);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-        console.error('Error in POST request:', err.message);
-      } else {
-        setError('An unexpected error occurred');
-        console.error('Unexpected error in POST request:', err);
-      }
-    } finally {
+
+      // Redirect to login page after a short delay to show success message
       setTimeout(() => {
         navigate('/login');
       }, 2000);
+    } catch (err) {
+      let errorMessage = 'An unexpected error occurred';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        console.error('Error in POST request:', err.message);
+        if (err.message.includes('Token')) {
+          errorMessage = 'Invalid or expired token. Please request a new password reset link.';
+        }
+      } else {
+        console.error('Unexpected error in POST request:', err);
+      }
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -165,8 +176,8 @@ const SetPasswordPage: React.FC = () => {
               {error && <p className="text-red-600 text-sm">{error}</p>}
 
               <div className="flex justify-end">
-                <Button type="submit" variant="primary">
-                  Set Password
+                <Button type="submit" variant="primary" disabled={isLoading}>
+                  {isLoading ? 'Setting Password...' : 'Set Password'}
                 </Button>
               </div>
             </form>
