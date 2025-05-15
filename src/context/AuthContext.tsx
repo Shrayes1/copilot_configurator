@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!credentials.token) {
         console.log('No token provided, falling back to /signin');
-        const authResponse = await fetch('https://pretty-otters-dance.loca.lt/signin', {
+        const authResponse = await fetch('https://dull-windows-write.loca.lt/signin', {
           method: 'POST',
           headers: {
             'bypass-tunnel-reminder': 'true',
@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setPassword = async (email: string, token: string, password: string) => {
     console.log('Setting password with token:', token, 'for email:', email);
 
-    const setPasswordResponse = await fetch('https://pretty-otters-dance.loca.lt/set-password', {
+    const setPasswordResponse = await fetch('https://dull-windows-write.loca.lt/set-password', {
       method: 'POST',
       headers: {
         'bypass-tunnel-reminder': 'true',
@@ -144,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     console.log('Updating last active for user:', email);
-    await fetch(`https://pretty-otters-dance.loca.lt/user/${encodeURIComponent(email)}/update-last-active`, {
+    await fetch(`https://dull-windows-write.loca.lt/user/${encodeURIComponent(email)}/update-last-active`, {
       method: 'POST',
       headers: {
         'bypass-tunnel-reminder': 'true',
