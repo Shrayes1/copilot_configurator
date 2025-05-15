@@ -247,7 +247,7 @@ const ServiceDashboardPage: React.FC = () => {
       console.log('Form data submitted:', formData);
   
       // Step 1: Create the organization and admin user
-      const createOrgResponse = await fetch('https://silver-suits-tease.loca.lt/create_org', {
+      const createOrgResponse = await fetch('https://tough-rings-leave.loca.lt/create_org', {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',
@@ -257,19 +257,19 @@ const ServiceDashboardPage: React.FC = () => {
           username: formData.organizationId,
           name: formData.adminName,
           email: formData.adminEmail,
-          role: "admin",
+          role: 'admin',
           org_settings_id: formData.organizationId,
         }),
       });
   
-      if (!createOrgResponse.ok) {
-        const errorData = await createOrgResponse.json();
-        console.error('create_org API error:', errorData);
-        throw new Error(errorData.message || 'Failed to create organization');
-      }
-  
+      console.log('create_org status:', createOrgResponse.status);
       const createOrgData = await createOrgResponse.json();
       console.log('create_org response:', createOrgData);
+  
+      if (!createOrgResponse.ok) {
+        console.error('create_org API error:', createOrgData);
+        throw new Error(createOrgData.message || 'Failed to create organization');
+      }
   
       if (createOrgData.msg !== 'Organization admin created. Send password creation link to email.') {
         throw new Error(createOrgData.msg || 'Unexpected response from server');
@@ -278,14 +278,11 @@ const ServiceDashboardPage: React.FC = () => {
       // Step 2: Get token and send password set email
       const token = createOrgData.pass_token;
       console.log('Token received:', token);
-      console.log('Admin email:', formData.adminEmail);
-      console.log('Organization ID:', formData.organizationId);
-      console.log('Organization name:', formData.organizationName);
       if (!token) {
         throw new Error('No token received from create_org response');
       }
   
-      const sendPasswordResponse = await fetch('https://silver-suits-tease.loca.lt/send_password_set', {
+      const sendPasswordResponse = await fetch('https://tough-rings-leave.loca.lt/send_password_set', {
         method: 'POST',
         headers: {
           'bypass-tunnel-reminder': 'true',
@@ -298,16 +295,16 @@ const ServiceDashboardPage: React.FC = () => {
         }),
       });
   
-      if (!sendPasswordResponse.ok) {
-        const errorData = await sendPasswordResponse.json();
-        console.error('send_password_set API error:', errorData);
-        throw new Error(errorData.message || 'Failed to send password creation email');
-      }
-  
+      console.log('send_password_set status:', sendPasswordResponse.status);
       const sendPasswordData = await sendPasswordResponse.json();
       console.log('send_password_set response:', sendPasswordData);
   
-      if (sendPasswordData.msg !== 'Password reset email sent') {
+      if (!sendPasswordResponse.ok) {
+        console.error('send_password_set API error:', sendPasswordData);
+        throw new Error(sendPasswordData.message || 'Failed to send password creation email');
+      }
+  
+      if (!['Password reset email sent', 'Email sent successfully'].includes(sendPasswordData.msg)) {
         throw new Error(sendPasswordData.msg || 'Unexpected response from password email endpoint');
       }
   
@@ -351,11 +348,12 @@ const ServiceDashboardPage: React.FC = () => {
   
       setOrganizations((prev) => [...prev, newOrganization]);
       setIsModalOpen(false);
-      setSuccessMessage(`A link to set the password has been sent to ${formData.adminEmail}`);
+      setSuccessMessage(`Organization created! A password setup link was sent to ${formData.adminEmail}`);
   
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
+      return () => clearTimeout(timeoutId); // Cleanup (if in useEffect)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       console.error('Error in handleAddOrganization:', errorMessage);

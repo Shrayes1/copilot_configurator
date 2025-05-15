@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-  const BASE_URL = 'https://silver-suits-tease.loca.lt';
+  const BASE_URL = 'https://tough-rings-leave.loca.lt';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
@@ -27,6 +27,15 @@ const SetPasswordPage: React.FC = () => {
     setHasNumber(/\d/.test(password));
     setHasSpecialChar(/[@$!%*?&]/.test(password));
   }, [password]);
+
+  useEffect(() => {
+    if (success) {
+      const timeoutId = setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [success, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +62,7 @@ const SetPasswordPage: React.FC = () => {
     }
 
     const requestBody = {
-      password: password,
+      pw: password, // Fixed field name to match backend expectation
       token: token,
     };
 
@@ -70,6 +79,7 @@ const SetPasswordPage: React.FC = () => {
         body: JSON.stringify(requestBody),
       });
 
+      console.log('set_password status:', response.status);
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
@@ -78,23 +88,21 @@ const SetPasswordPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
+      console.log('set_password response:', data);
 
       if (!response.ok) {
+        if (response.status === 400 && data.message.includes('token')) {
+          throw new Error('Invalid or expired token. Please request a new password reset link.');
+        }
         throw new Error(data.message || 'Failed to set password');
       }
 
-      if (data.msg !== 'Password set successfully') {
+      if (!['Password set successfully', 'Password updated'].includes(data.msg)) {
         throw new Error(data.msg || 'Unexpected response from server');
       }
 
       console.log('Password set successfully, setting success state');
       setSuccess(true);
-
-      // Redirect to login page after a short delay to show success message
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
     } catch (err) {
       let errorMessage = 'An unexpected error occurred';
       if (err instanceof Error) {
