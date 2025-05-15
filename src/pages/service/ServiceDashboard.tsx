@@ -30,9 +30,10 @@ interface FormData {
 interface AddOrganizationFormProps {
   onSubmit: (formData: FormData) => void;
   onCancel: () => void;
+  isLoading: boolean;
 }
 
-const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onCancel }) => {
+const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onCancel, isLoading }) => {
   const { authState } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     adminName: '',
@@ -98,6 +99,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
           value={formData.organizationId}
           onChange={handleInputChange}
           required
+          disabled={isLoading}
         />
         <Input
           id="organizationName"
@@ -106,6 +108,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
           value={formData.organizationName}
           onChange={handleInputChange}
           required
+          disabled={isLoading}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -116,6 +119,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
           value={formData.adminName}
           onChange={handleInputChange}
           required
+          disabled={isLoading}
         />
         <Input
           id="adminEmail"
@@ -125,6 +129,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
           value={formData.adminEmail}
           onChange={handleInputChange}
           required
+          disabled={isLoading}
         />
       </div>
       <div>
@@ -138,6 +143,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
           onChange={handleInputChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           required
+          disabled={isLoading}
         >
           <option value="basic">Basic</option>
           <option value="growth">Growth</option>
@@ -153,6 +159,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
         onChange={handleInputChange}
         required
         min="0"
+        disabled={isLoading}
       />
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -160,7 +167,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
         </label>
         <div className="border border-gray-300 rounded-md p-3 space-y-3">
           {Object.keys(modules).map((moduleId) => {
-            const isDisabled = !availableLicenses[moduleId] || availableLicenses[moduleId].available < formData.totalLicenses;
+            const isDisabled = (!availableLicenses[moduleId] || availableLicenses[moduleId].available < formData.totalLicenses) && !modules[moduleId];
             const moduleName = moduleId
               .split('-')
               .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -174,7 +181,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     checked={modules[moduleId]}
                     onChange={() => handleModuleChange(moduleId)}
-                    disabled={isDisabled && !modules[moduleId]}
+                    disabled={isDisabled || isLoading}
                   />
                   <label htmlFor={`module-${moduleId}`} className="ml-2 block text-sm text-gray-900">
                     {moduleName}
@@ -195,11 +202,11 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
         </div>
       </div>
       <div className="flex justify-end space-x-2">
-        <Button variant="outline" type="button" onClick={onCancel}>
+        <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>
           Cancel
         </Button>
-        <Button variant="primary" type="submit">
-          Submit
+        <Button variant="primary" type="submit" disabled={isLoading}>
+          {isLoading ? 'Creating...' : 'Submit'}
         </Button>
       </div>
     </form>
@@ -211,6 +218,7 @@ const ServiceDashboardPage: React.FC = () => {
   const { organization } = authState;
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>(mockOrganizations);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
@@ -243,14 +251,15 @@ const ServiceDashboardPage: React.FC = () => {
   };
 
   const handleAddOrganization = async (formData: FormData) => {
+    setIsLoading(true);
     try {
       console.log('Form data submitted:', formData);
   
       // Step 1: Create the organization and admin user
-      const createOrgResponse = await fetch('https://ready-items-burn.loca.lt/create_org', {
+      const createOrgResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/create_org', {
         method: 'POST',
         headers: {
-          'bypass-tunnel-reminder': 'true',
+          
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -282,10 +291,10 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error('No token received from create_org response');
       }
   
-      const sendPasswordResponse = await fetch('https://ready-items-burn.loca.lt/send_password_set', {
+      const sendPasswordResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/send_password_set', {
         method: 'POST',
         headers: {
-          'bypass-tunnel-reminder': 'true',
+         
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -353,7 +362,7 @@ const ServiceDashboardPage: React.FC = () => {
       const timeoutId = setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-      return () => clearTimeout(timeoutId); // Cleanup (if in useEffect)
+      return () => clearTimeout(timeoutId);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       console.error('Error in handleAddOrganization:', errorMessage);
@@ -361,11 +370,23 @@ const ServiceDashboardPage: React.FC = () => {
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   return (
     <div className="space-y-6">
+      {/* Loading Screen */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50" aria-busy={isLoading} role="status">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
+            <p className="mt-4 text-white text-lg font-medium">Creating organization...</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Service Provider Dashboard</h1>
@@ -379,6 +400,7 @@ const ServiceDashboardPage: React.FC = () => {
             variant="primary"
             leftIcon={<Building2 size={16} />}
             onClick={() => setIsModalOpen(true)}
+            disabled={isLoading}
           >
             Add Organization
           </Button>
@@ -716,6 +738,7 @@ const ServiceDashboardPage: React.FC = () => {
         <AddOrganizationForm
           onSubmit={handleAddOrganization}
           onCancel={() => setIsModalOpen(false)}
+          isLoading={isLoading}
         />
       </Modal>
     </div>

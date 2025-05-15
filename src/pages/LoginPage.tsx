@@ -28,10 +28,9 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://ready-items-burn.loca.lt/signin', {
+      const response = await fetch('https://d315-14-143-149-238.ngrok-free.app/signin', {
         method: 'POST',
         headers: {
-          'bypass-tunnel-reminder': 'true',
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
@@ -40,6 +39,13 @@ const LoginPage: React.FC = () => {
           pw: password,
         }),
       });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error('Server returned an unexpected response. Please try again or contact support.');
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -52,10 +58,7 @@ const LoginPage: React.FC = () => {
         throw new Error('Unauthorized response from server: ' + JSON.stringify(data));
       }
 
-      // if (!data.role || !['cognicor_admin', 'org_admin'].includes(data.role)) {
-      //   throw new Error('Invalid or missing role in response: ' + JSON.stringify(data));
-      // }
-      data.role = 'cognicor_admin';
+      data.role = 'cognicor_admin'; // Temporary override, consider removing if backend provides role
       try {
         await login({
           email: email,
@@ -63,7 +66,7 @@ const LoginPage: React.FC = () => {
           token: data.token || undefined,
           role: data.role,
           organization: data.organization || undefined,
-          id: data.id || '', // Pass the user id
+          id: data.id || '',
         });
         console.log('Login function completed successfully');
 
@@ -85,6 +88,7 @@ const LoginPage: React.FC = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
+      console.error('Login error:', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -101,6 +105,16 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Loading Screen */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-white text-lg font-medium">Signing in...</p>
+          </div>
+        </div>
+      )}
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mx-auto w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
           <KeyRound className="w-8 h-8 text-white" />
@@ -121,7 +135,7 @@ const LoginPage: React.FC = () => {
                 {error}
               </div>
             )}
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -136,6 +150,7 @@ const LoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -154,6 +169,7 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  disabled={isLoading}
                 />
               </div>
             </div>

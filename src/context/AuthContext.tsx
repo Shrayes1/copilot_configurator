@@ -59,10 +59,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!credentials.token) {
         console.log('No token provided, falling back to /signin');
-        const authResponse = await fetch('https://ready-items-burn.loca.lt/signin', {
+        const authResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/signin', {
           method: 'POST',
           headers: {
-            'bypass-tunnel-reminder': 'true',
+         
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
@@ -120,10 +120,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setPassword = async (email: string, token: string, password: string) => {
     console.log('Setting password with token:', token, 'for email:', email);
 
-    const setPasswordResponse = await fetch('https://ready-items-burn.loca.lt/set_password', {
+    const setPasswordResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/set_password', {
       method: 'POST',
       headers: {
-        'bypass-tunnel-reminder': 'true',
+        
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -144,10 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     console.log('Updating last active for user:', email);
-    await fetch(`https://ready-items-burn.loca.lt/user/${encodeURIComponent(email)}/update-last-active`, {
+    await fetch(`https://d315-14-143-149-238.ngrok-free.app/user/${encodeURIComponent(email)}/update-last-active`, {
       method: 'POST',
       headers: {
-        'bypass-tunnel-reminder': 'true',
+       
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },

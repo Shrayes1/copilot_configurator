@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-  const BASE_URL = 'https://ready-items-burn.loca.lt';
+  const BASE_URL = 'https://d315-14-143-149-238.ngrok-free.app';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
@@ -62,7 +62,7 @@ const SetPasswordPage: React.FC = () => {
     }
 
     const requestBody = {
-      pw: password, // Fixed field name to match backend expectation
+      pw: password,
       token: token,
     };
 
@@ -73,7 +73,7 @@ const SetPasswordPage: React.FC = () => {
       const response = await fetch(`${BASE_URL}/set_password`, {
         method: 'POST',
         headers: {
-          'bypass-tunnel-reminder': 'true',
+          
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
@@ -122,6 +122,16 @@ const SetPasswordPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      {/* Loading Screen */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50" aria-busy={isLoading} role="status">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
+            <p className="mt-4 text-white text-lg font-medium">Setting password...</p>
+          </div>
+        </div>
+      )}
+
       <Card className="w-full max-w-md">
         <CardContent className="p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -149,6 +159,7 @@ const SetPasswordPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
               <Input
                 id="confirmPassword"
@@ -158,6 +169,7 @@ const SetPasswordPage: React.FC = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
 
               <div className="text-sm text-gray-600">
