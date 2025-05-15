@@ -189,7 +189,7 @@ const UserRow: React.FC<{ user: User; currentUser: User | null }> = ({ user, cur
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex flex-wrap gap-1">
-          {user.modules.map(module => {
+          {(user.modules ?? []).map(module => {
             const moduleName = module
               .split('-')
               .map(word => word.charAt(0).toUpperCase() + word.slice(1))

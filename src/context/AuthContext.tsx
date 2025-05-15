@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!credentials.token) {
         console.log('No token provided, falling back to /signin');
-        const authResponse = await fetch('https://5066-14-143-149-238.ngrok-free.app/signin', {
+        const authResponse = await fetch('https://6291-14-143-149-238.ngrok-free.app/signin', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setPassword = async (email: string, token: string, password: string) => {
     console.log('Setting password with token:', token, 'for email:', email);
 
-    const setPasswordResponse = await fetch('https://5066-14-143-149-238.ngrok-free.app/set-password', {
+    const setPasswordResponse = await fetch('https://6291-14-143-149-238.ngrok-free.app/set-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     console.log('Updating last active for user:', email);
-    await fetch(`https://5066-14-143-149-238.ngrok-free.app/user/${encodeURIComponent(email)}/update-last-active`, {
+    await fetch(`https://6291-14-143-149-238.ngrok-free.app/user/${encodeURIComponent(email)}/update-last-active`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

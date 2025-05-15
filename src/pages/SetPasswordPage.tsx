@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
   // Replace with your current ngrok URL or production URL
-  const BASE_URL = 'https://5066-14-143-149-238.ngrok-free.app'; // Update this!
+  const BASE_URL = 'https://6291-14-143-149-238.ngrok-free.app';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);
@@ -32,47 +32,39 @@ const SetPasswordPage: React.FC = () => {
     e.preventDefault();
     setError(null);
   
-    // Validate token presence
     if (!token) {
       setError('No token provided in the URL');
       console.error('Token missing in URL');
       return;
     }
   
-    // Password validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      console.log('Password validation failed: Passwords do not match');
       return;
     }
     if (!passwordRegex.test(password)) {
       setError('Password must meet strength requirements');
-      console.log('Password validation failed: Does not meet strength requirements');
       return;
     }
   
-    // Prepare data in x-www-form-urlencoded format
-    const formData = new URLSearchParams();
-    formData.append('token', token);
-    formData.append('pw', password);
+    const requestBody = {
+      password: password,
+      token: token,
+    };
   
-    // Send POST request to /set-password
     try {
       console.log('Sending POST request to:', `${BASE_URL}/set-password`);
-      console.log('Payload:', formData.toString());
+      console.log('Payload:', JSON.stringify(requestBody));
+  
       const response = await fetch(`${BASE_URL}/set-password`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(requestBody),
       });
   
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers.get('content-type'));
-  
-      // Check if the response is JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
@@ -80,7 +72,6 @@ const SetPasswordPage: React.FC = () => {
         throw new Error('Server did not return JSON. Check the endpoint or server logs.');
       }
   
-      // Parse JSON response
       const data = await response.json();
       console.log('Response data:', data);
   
@@ -96,7 +87,7 @@ const SetPasswordPage: React.FC = () => {
       setSuccess(true);
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message || 'Failed to fetch');
+        setError(err.message);
         console.error('Error in POST request:', err.message);
       } else {
         setError('An unexpected error occurred');
@@ -104,11 +95,11 @@ const SetPasswordPage: React.FC = () => {
       }
     } finally {
       setTimeout(() => {
-        console.log('Redirecting to /login');
         navigate('/login');
       }, 2000);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
