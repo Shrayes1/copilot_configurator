@@ -266,7 +266,7 @@ const ServiceDashboardPage: React.FC = () => {
           username: formData.organizationId,
           name: formData.adminName,
           email: formData.adminEmail,
-          role: 'admin',
+          role: 'org_admin',
           org_settings_id: formData.organizationId,
         }),
       });
