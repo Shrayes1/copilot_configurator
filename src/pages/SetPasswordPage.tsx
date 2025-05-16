@@ -18,7 +18,7 @@ const SetPasswordPage: React.FC = () => {
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-  const BASE_URL = 'https://d315-14-143-149-238.ngrok-free.app';
+  const BASE_URL = 'https://b171-14-143-149-238.ngrok-free.app';
 
   useEffect(() => {
     setHasMinLength(password.length >= 8);

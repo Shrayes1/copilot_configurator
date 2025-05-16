@@ -16,6 +16,7 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
 
+    // Client-side validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address');
       setIsLoading(false);
@@ -28,11 +29,12 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://d315-14-143-149-238.ngrok-free.app/signin', {
+      const response = await fetch('https://b171-14-143-149-238.ngrok-free.app/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true', // Add this header to bypass ngrok warning
         },
         body: JSON.stringify({
           email: email,
@@ -54,25 +56,39 @@ const LoginPage: React.FC = () => {
 
       const data = await response.json();
       console.log('Signin response:', data);
+
       if (data.msg !== 'Login successful') {
         throw new Error('Unauthorized response from server: ' + JSON.stringify(data));
       }
 
-      data.role = 'cognicor_admin'; // Temporary override, consider removing if backend provides role
+      // Map backend role to expected roles
+      const roleMapping: { [key: string]: string } = {
+        adm: 'cognicor_admin', // Map "adm" to "cognicor_admin"
+        org_admin: 'org_admin',
+        cognicor_admin: 'cognicor_admin',
+      };
+
+      const mappedRole = roleMapping[data.role];
+      const validRoles = ['cognicor_admin', 'org_admin'];
+      if (!mappedRole || !validRoles.includes(mappedRole)) {
+        console.error('Invalid or missing role in response:', data.role);
+        throw new Error('Invalid user role. Please contact support.');
+      }
+
       try {
         await login({
           email: email,
           password: password,
           token: data.token || undefined,
-          role: data.role,
+          role: mappedRole, // Use mapped role
           organization: data.organization || undefined,
           id: data.id || '',
         });
         console.log('Login function completed successfully');
 
-        if (data.role === 'cognicor_admin') {
+        if (mappedRole === 'cognicor_admin') {
           setRedirect({ to: '/service/dashboard' });
-        } else if (data.role === 'org_admin') {
+        } else if (mappedRole === 'org_admin') {
           if (!data.organization) {
             throw new Error('Organization data required for org_admin role');
           }
@@ -87,7 +103,13 @@ const LoginPage: React.FC = () => {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
+      // Map backend errors to user-friendly messages
+      const friendlyError = errorMessage.includes('Invalid email or password')
+        ? 'Incorrect email or password. Please try again.'
+        : errorMessage.includes('Invalid user role')
+        ? 'Your account role is not supported. Please contact support.'
+        : errorMessage;
+      setError(friendlyError);
       console.error('Login error:', errorMessage);
     } finally {
       setIsLoading(false);

@@ -256,7 +256,7 @@ const ServiceDashboardPage: React.FC = () => {
       console.log('Form data submitted:', formData);
 
       // Step 1: Create the organization and admin user
-      const createOrgResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/create_org', {
+      const createOrgResponse = await fetch('https://b171-14-143-149-238.ngrok-free.app/create_org', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -298,7 +298,7 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error('No token received from create_org response');
       }
 
-      const sendPasswordResponse = await fetch('https://d315-14-143-149-238.ngrok-free.app/send_password_set', {
+      const sendPasswordResponse = await fetch('https://b171-14-143-149-238.ngrok-free.app/send_password_set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
