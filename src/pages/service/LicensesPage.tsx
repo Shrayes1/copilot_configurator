@@ -11,14 +11,14 @@ const LicensesPage: React.FC = () => {
   const { authState } = useAuth();
   const [search, setSearch] = useState('');
 
-  // Create a state to track license changes for each organization and module
+
   const [licenseChanges, setLicenseChanges] = useState<{
     [orgId: string]: {
       [moduleId: string]: number;
     };
   }>({});
 
-  // Filter organizations by service provider and search term
+
   const filteredOrganizations = mockOrganizations
     .filter(
       (org) =>
@@ -31,19 +31,18 @@ const LicensesPage: React.FC = () => {
         org.adminContact.email.toLowerCase().includes(search.toLowerCase())
     );
 
-  // Handle license adjustment
   const adjustLicense = (orgId: string, moduleId: string, amount: number) => {
     setLicenseChanges((prev) => {
       const orgChanges = prev[orgId] || {};
       const currentChange = orgChanges[moduleId] || 0;
 
-      // Calculate the organization and find the module
+   
       const org = mockOrganizations.find((o) => o.id === orgId);
       const moduleData = org?.licenses.modules[moduleId];
       const moduleTotal = moduleData?.total || 0;
       const moduleUsed = moduleData?.used || 0;
 
-      // Prevent reducing licenses below the number currently used
+     
       if (moduleTotal + currentChange + amount < moduleUsed) {
         return prev;
       }
@@ -58,23 +57,21 @@ const LicensesPage: React.FC = () => {
     });
   };
 
-  // Check if there are any changes
+
   const hasChanges = Object.keys(licenseChanges).length > 0;
 
-  // Calculate the change for a module
+ 
   const getModuleChange = (orgId: string, moduleId: string): number => {
     return licenseChanges[orgId]?.[moduleId] || 0;
   };
 
-  // Reset all changes
+ 
   const resetChanges = () => {
     setLicenseChanges({});
   };
 
-  // Save changes
   const saveChanges = () => {
-    // Here we would make an API call to save the changes
-    // For this demo, we'll just reset the state
+
     alert('License changes have been saved!');
     resetChanges();
   };
@@ -157,12 +154,11 @@ const OrganizationLicenses: React.FC<OrganizationLicensesProps> = ({
     const change = getModuleChange(organization.id, key);
     const newTotal = moduleData.total + change;
 
-    // Calculate percentage, handling edge cases
     let percentage = 0;
     if (newTotal > 0) {
       percentage = Math.min(100, Math.round((moduleData.used / newTotal) * 100));
     } else if (moduleData.used > 0) {
-      percentage = 100; // If used > 0 but newTotal is 0, show full bar
+      percentage = 100;
     }
 
     return {
@@ -218,7 +214,7 @@ const OrganizationLicenses: React.FC<OrganizationLicensesProps> = ({
                   <button
                     className="p-1 rounded-md hover:bg-gray-100"
                     onClick={() => adjustLicense(organization.id, module.id, -1)}
-                    disabled={module.newTotal <= module.used} // Disable if reducing would go below used
+                    disabled={module.newTotal <= module.used} 
                   >
                     <Minus size={14} className="text-gray-500" />
                   </button>

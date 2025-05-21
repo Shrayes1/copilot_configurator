@@ -1,27 +1,59 @@
+import { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
-import { RocketIcon, UsersIcon } from "lucide-react"
+import { RocketIcon, UsersIcon } from 'lucide-react';
 
 const stats = [
   {
-    title: "Total Users",
-    value: "24",
-    change: "+12% from last month",
+    title: 'Total Users',
+    value: '24',
+    change: '+12% from last month',
     icon: <UsersIcon className="w-5 h-5 text-indigo-500" />,
   },
   {
-    title: "Active Licenses",
-    value: "156",
-    change: "98% utilization",
+    title: 'Active Licenses',
+    value: '156',
+    change: '98% utilization',
     icon: <RocketIcon className="w-5 h-5 text-purple-500" />,
   },
-]
+];
 
 export default function DashboardPage() {
+  const [orgData, setOrgData] = useState({
+    organizationName: 'Initech', // Default fallback
+    adminName: 'Emily Davis', // Default fallback
+  });
+
+  useEffect(() => {
+    // Function to fetch organization data
+    const fetchOrgData = async () => {
+      try {
+        const response = await fetch('https://19a7-14-143-149-238.ngrok-free.app/get_org', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+            // Include authorization token if required
+            // 'Authorization': `Bearer ${yourToken}`,
+          },
+        });
+        const data = await response.json();
+        setOrgData({
+          organizationName: data.username || 'Initech', // Use username as org name
+          adminName: data.name || 'Emily Davis', // Use name as admin name
+        });
+      } catch (error) {
+        console.error('Error fetching org data:', error);
+      }
+    };
+
+    fetchOrgData();
+  }, []);
+
   return (
     <div className="px-4 sm:px-6 lg:px-6 py-6">
       <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
       <p className="text-sm text-muted-foreground mb-4">
-        Welcome back, Emily Davis
+        Welcome back, {orgData.adminName}
       </p>
 
       {/* Stat Cards */}
@@ -48,7 +80,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-4 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Organization Name</span>
-            <span className="font-medium">Initech</span>
+            <span className="font-medium">{orgData.organizationName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Organization Type</span>
@@ -61,5 +93,5 @@ export default function DashboardPage() {
         </div>
       </Card>
     </div>
-  )
+  );
 }

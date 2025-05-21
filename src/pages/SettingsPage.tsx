@@ -30,7 +30,7 @@ const SettingsPage: React.FC = () => {
 
   const handleSaveSettings = () => {
     setIsSaving(true);
-    // Simulate API call
+
     setTimeout(() => {
       setIsSaving(false);
       setSaveSuccess(true);

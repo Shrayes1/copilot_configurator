@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    // Client-side validation
+ 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address');
       setIsLoading(false);
@@ -29,12 +29,13 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://b171-14-143-149-238.ngrok-free.app/signin', {
+      const response = await fetch('https://19a7-14-143-149-238.ngrok-free.app/signin', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'ngrok-skip-browser-warning': 'true', // Add this header to bypass ngrok warning
+          //'ngrok-skip-browser-warning': 'true', 
         },
         body: JSON.stringify({
           email: email,
@@ -61,11 +62,10 @@ const LoginPage: React.FC = () => {
         throw new Error('Unauthorized response from server: ' + JSON.stringify(data));
       }
 
-      // Map backend role to expected roles
+      
       const roleMapping: { [key: string]: string } = {
-        adm: 'cognicor_admin', // Map "adm" to "cognicor_admin"
+        adm: 'cognicor_admin', 
         org_admin: 'org_admin',
-        cognicor_admin: 'cognicor_admin',
       };
 
       const mappedRole = roleMapping[data.role];
@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
           email: email,
           password: password,
           token: data.token || undefined,
-          role: mappedRole, // Use mapped role
+          role: mappedRole, 
           organization: data.organization || undefined,
           id: data.id || '',
         });
@@ -89,9 +89,9 @@ const LoginPage: React.FC = () => {
         if (mappedRole === 'cognicor_admin') {
           setRedirect({ to: '/service/dashboard' });
         } else if (mappedRole === 'org_admin') {
-          if (!data.organization) {
-            throw new Error('Organization data required for org_admin role');
-          }
+          // if (!data.organization) {
+          //   throw new Error('Organization data required for org_admin role');
+          // }
           setRedirect({
             to: '/customer/dashboard',
             state: { organization: data.organization },
@@ -103,7 +103,7 @@ const LoginPage: React.FC = () => {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      // Map backend errors to user-friendly messages
+     
       const friendlyError = errorMessage.includes('Invalid email or password')
         ? 'Incorrect email or password. Please try again.'
         : errorMessage.includes('Invalid user role')

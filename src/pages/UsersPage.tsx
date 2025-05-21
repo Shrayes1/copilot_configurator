@@ -88,12 +88,11 @@ const UsersPage: React.FC = () => {
   const { authState } = useAuth();
   const [search, setSearch] = useState('');
 
-  // Redirect to login if user is not authenticated
   if (!authState.isAuthenticated || !authState.user || !authState.organization) {
     return <Navigate to="/login" replace />;
   }
 
-  // Filter users by organization and search term
+ 
   const filteredUsers = mockUsers
     .filter(user => authState.organization?.id && user.organizationId === authState.organization.id)
     .filter(user => 

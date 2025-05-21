@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Organization {
   id: string;
@@ -45,26 +45,52 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
+
+const getInitialAuthState = (): AuthState => {
+  try {
+    const storedAuth = localStorage.getItem('authState');
+    if (storedAuth) {
+      const parsedAuth = JSON.parse(storedAuth);
+      if (parsedAuth && typeof parsedAuth.isAuthenticated === 'boolean' && (!parsedAuth.user || typeof parsedAuth.user === 'object')) {
+        return parsedAuth;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to parse authState from localStorage:', error);
+    localStorage.removeItem('authState');
+  }
+  return {
     isAuthenticated: false,
     user: null,
     organization: undefined,
-  });
+  };
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
+
+
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      localStorage.setItem('authState', JSON.stringify(authState));
+    } else {
+      localStorage.removeItem('authState');
+    }
+  }, [authState]);
 
   const login = async (credentials: { email: string; password: string; token?: string; role?: string; organization?: Organization; id?: string }) => {
-    let user = null;
+    let user: AuthState['user'] = null;
     let organization = credentials.organization;
 
     try {
       if (!credentials.token) {
         console.log('No token provided, falling back to /signin');
-        const authResponse = await fetch('https://b171-14-143-149-238.ngrok-free.app/signin', {
+        const authResponse = await fetch('https://19a7-14-143-149-238.ngrok-free.app/signin', {
           method: 'POST',
           headers: {
-         
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
           },
           body: JSON.stringify({
             username: credentials.email,
@@ -73,19 +99,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (!authResponse.ok) {
-          const errorData = await authResponse.json();
+          const errorData: { message?: string } = await authResponse.json();
           throw new Error(errorData.message || 'Invalid email or password');
         }
 
-        const authData = await authResponse.json();
+        const authData: { msg: string } = await authResponse.json();
         if (authData.msg !== 'User authenticated successfully') {
           throw new Error('Unexpected response from server');
         }
       }
 
-      // Set user data with role and id from credentials
       user = {
-        id: credentials.id || '', // Use provided id or fallback to empty string
+        id: credentials.id || '',
         email: credentials.email,
         name: '',
         organizationId: credentials.organization?.id || '',
@@ -115,17 +140,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user: null,
       organization: undefined,
     });
+    localStorage.removeItem('authState');
   };
 
   const setPassword = async (email: string, token: string, password: string) => {
     console.log('Setting password with token:', token, 'for email:', email);
 
-    const setPasswordResponse = await fetch('https://b171-14-143-149-238.ngrok-free.app/set_password', {
+    const setPasswordResponse = await fetch('https://19a7-14-143-149-238.ngrok-free.app/set_password', {
       method: 'POST',
       headers: {
-        
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: JSON.stringify({
         token: token,
@@ -134,27 +160,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (!setPasswordResponse.ok) {
-      const errorData = await setPasswordResponse.json();
+      const errorData: { message?: string } = await setPasswordResponse.json();
       throw new Error(errorData.message || 'Failed to set password');
     }
 
-    const setPasswordData = await setPasswordResponse.json();
+    const setPasswordData: { msg: string } = await setPasswordResponse.json();
     if (setPasswordData.msg !== 'Password set successfully') {
       throw new Error('Unexpected response from server');
     }
 
     console.log('Updating last active for user:', email);
-    await fetch(`https://b171-14-143-149-238.ngrok-free.app/user/${encodeURIComponent(email)}/update-last-active`, {
-      method: 'POST',
-      headers: {
-       
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        lastActive: new Date().toISOString(),
-      }),
-    });
+    try {
+      const response = await fetch(`https://19a7-14-143-149-238.ngrok-free.app/user/${encodeURIComponent(email)}/update-last-active`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify({
+          lastActive: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData: { message?: string } = await response.json();
+        throw new Error(errorData.message || 'Failed to update last active');
+      }
+    } catch (err) {
+      console.error('Error updating last active:', err);
+      throw err;
+    }
   };
 
   return (

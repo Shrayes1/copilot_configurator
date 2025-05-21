@@ -28,12 +28,12 @@ const AddUserForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here we would typically make an API call to create the user
+   
     alert(`User added: ${firstName} ${lastName} (${email})`);
     onClose();
   };
   
-  // Calculate available licenses for each module
+
   const availableLicenses: Record<string, { available: number, total: number }> = {};
   
   if (authState.organization) {
@@ -252,7 +252,7 @@ const CustomerUsersPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   
-  // Filter users by organization and search term
+ 
   const filteredUsers = mockUsers
     .filter(user => user.organizationId === authState.organization?.id)
     .filter(user => 

@@ -16,7 +16,7 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 
-// Define the FormData interface
+
 interface FormData {
   adminName: string;
   adminEmail: string;
@@ -66,7 +66,7 @@ const AddOrganizationForm: React.FC<AddOrganizationFormProps> = ({ onSubmit, onC
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Client-side validation for email
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.adminEmail)) {
       alert('Please enter a valid email address');
@@ -255,8 +255,8 @@ const ServiceDashboardPage: React.FC = () => {
     try {
       console.log('Form data submitted:', formData);
 
-      // Step 1: Create the organization and admin user
-      const createOrgResponse = await fetch('https://b171-14-143-149-238.ngrok-free.app/create_org', {
+     
+      const createOrgResponse = await fetch('https://19a7-14-143-149-238.ngrok-free.app/create_org', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -270,6 +270,14 @@ const ServiceDashboardPage: React.FC = () => {
           org_settings_id: formData.organizationId,
         }),
       });
+
+      const responseData = await createOrgResponse.json();
+        if (createOrgResponse.ok) {
+          localStorage.setItem('pass_token', responseData.pass_token);
+  // Redirect to dashboard or proceed
+        } else {
+            console.error(responseData.msg);
+        }
 
       console.log('create_org status:', createOrgResponse.status);
       const createOrgContentType = createOrgResponse.headers.get('content-type');
@@ -291,14 +299,14 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error(createOrgData.msg || 'Unexpected response from create_org');
       }
 
-      // Step 2: Get token and send password set email
+      
       const token = createOrgData.pass_token;
       console.log('Token received:', token);
       if (!token) {
         throw new Error('No token received from create_org response');
       }
 
-      const sendPasswordResponse = await fetch('https://b171-14-143-149-238.ngrok-free.app/send_password_set', {
+      const sendPasswordResponse = await fetch('https://19a7-14-143-149-238.ngrok-free.app/send_password_set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -327,15 +335,13 @@ const ServiceDashboardPage: React.FC = () => {
         throw new Error(sendPasswordData.message || 'Failed to send password creation email');
       }
 
-      // Allow more flexible response messages
       const validMessages = ['Password reset email sent', 'Email sent successfully', 'Email sent'];
       if (!validMessages.includes(sendPasswordData.msg)) {
         console.warn('Unexpected msg from send_password_set:', sendPasswordData.msg);
-        // Optionally proceed instead of throwing
-        // throw new Error(sendPasswordData.msg || 'Unexpected response from password email endpoint');
+      
       }
 
-      // Step 3: Update local state
+  
       const newOrganization: Organization = {
         id: formData.organizationId,
         name: formData.organizationName || formData.organizationId,

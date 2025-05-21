@@ -17,13 +17,13 @@ const OrganizationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [expandUsers, setExpandUsers] = useState(false);
   
-  // Find the organization
+ 
   const organization = mockOrganizations.find(org => org.id === id);
   
-  // Find users in this organization
+
   const orgUsers = mockUsers.filter(user => user.organizationId === id);
   
-  // Find admin users
+
   const adminUsers = orgUsers.filter(user => user.role === 'admin');
   
   if (!organization) {
@@ -44,7 +44,7 @@ const OrganizationDetailPage: React.FC = () => {
     );
   }
 
-  // Get module names and their usage
+
   const modules = Object.keys(organization.licenses.modules).map(key => {
     const moduleData = organization.licenses.modules[key];
     return {

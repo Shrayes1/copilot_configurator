@@ -11,10 +11,10 @@ import { Organization } from '../../types';
 const OrganizationRow: React.FC<{ organization: Organization }> = ({ organization }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   
-  // Find the number of users in this organization
+
   const orgUsers = mockUsers.filter(user => user.organizationId === organization.id);
   
-  // Calculate license percentage
+
   const licensePercentage = Math.round((organization.licenses.used / organization.licenses.total) * 100);
   
   return (
@@ -109,7 +109,7 @@ const OrganizationsPage: React.FC = () => {
   const { authState } = useAuth();
   const [search, setSearch] = useState('');
   
-  // Filter organizations by service provider and search term
+ 
   const filteredOrganizations = mockOrganizations
     .filter(org => 
       org.type === 'customer' && 
